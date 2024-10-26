@@ -1,2 +1,4 @@
-# web-450
-Repository for work in WEB 450
+# WEB 450 - Mastering the MEAN Stack Bootcamp
+## Contributors
+- Richard Krasso
+- Brandon Salvemini
