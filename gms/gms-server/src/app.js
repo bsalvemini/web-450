@@ -7,21 +7,41 @@
 
 // require statements
 const express = require('express');
-const createError = require('http-errors');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const mongoose = require('mongoose');
 const { notFoundHandler, errorHandler } = require('./error-handler');
 
 // Importing the index router
 const indexRouter = require('./routes/index');
+const gardenRouter = require('./routes/garden');
+const plantRouter = require('./routes/plant');
 
 // Variable declaration for the express app
 let app = express();
 
+// Mongoose connection
+
+const connectionString = 'mongodb+srv://gms_user:s3cret@bellevueuniversity.lcwc1ht.mongodb.net/?retryWrites=true&w=majority'
+
+const dbName = 'gms';
+
+// Function to connect to the database
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(connectionString, {dbName: dbName});
+    console.log(`Connection to the '${dbName}' database was successful`)
+  } catch (err) {
+    console.error(`MongoDB connection error: ${err}`)
+  }
+}
+
+connectToDatabase()
+
 // CORS configuration
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*'); // This allows all origins
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allowed request methods
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS'); // Allowed request methods
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept'); // Allowed headers
   next();
 });
@@ -34,6 +54,8 @@ app.use(cookieParser());
 
 // Routing configuration
 app.use('/api', indexRouter);
+app.use('/api/gardens', gardenRouter);
+app.use('/api/plants', plantRouter);
 
 // Use the error handling middleware
 app.use(notFoundHandler);
