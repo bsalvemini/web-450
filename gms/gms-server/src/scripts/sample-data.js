@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const { Garden } = require('../models/garden')
-const { Plant } = require('../models/garden')
+const { Plant } = require('../models/plant')
 
-// Connect to MongoDBconst connectionString = 'mongodb+srv://gms_user:s3cret@bellevueuniversity.lcwc1ht.mongodb.net/?retryWrites=true&w=majority'
+// Connect to MongoDB
+const connectionString = 'mongodb+srv://gms_user:s3cret@bellevueuniversity.lcwc1ht.mongodb.net/?retryWrites=true&w=majority'
 
 const dbName = 'gms';
 
