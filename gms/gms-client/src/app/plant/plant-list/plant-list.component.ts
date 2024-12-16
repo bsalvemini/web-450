@@ -3,16 +3,34 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PlantService } from '../plant.service';
 import { Plant } from '../plant';
+import { FormsModule } from '@angular/forms';
+import { HighlightRecentDirective } from '../../highlight-recent.directive';
 
 @Component({
   selector: 'app-plant-list',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, FormsModule, HighlightRecentDirective],
   template: `
   <div class="plant-page">
     <h1 class="plant-page__title">Plant List</h1>
 
+    <div class="plant-page__filter-container">
+      <select [(ngModel)]="filterType" class="plant-page__filter">
+        <option value="">All</option>
+        <option value="Vegetable">Vegetable</option>
+        <option value="Flower">Flower</option>
+        <option value="Herb">Herb</option>
+        <option value="Tree">Tree</option>
+      </select>
+
+      <input type="button" (click)="filterPlants()" value="Filter Plants" class="plant-page__filter-button">
+    </div>
+
     <button class="plant-page__button" routerLink="/plants/add">Add Plant</button>
+
+    <div class="plant-page__highlight-info">
+      <p>Rows highlighted in green indicate plants that were planted within the last 30 days.</p>
+    </div>
 
     @if (serverMessage) {
       <div [ngClass]="{'message-alert': serverMessageType === 'error', 'message-success': serverMessageType === 'success'}">{{ serverMessage }}</div>
@@ -30,7 +48,7 @@ import { Plant } from '../plant';
         </tr>
       </thead>
       <tbody class="plant-page__table-body">
-        <tr *ngFor="let plant of plants" class="plant-page__table-row">
+        <tr *ngFor="let plant of plants" class="plant-page__table-row" [appHighlightRecent]='plant.datePlanted ?? ""'>
           <td class="plant-page__table-cell">{{ plant._id }}</td>
           <td class="plant-page__table-cell">{{ plant.name }}</td>
           <td class="plant-page__table-cell">{{ plant.type }}</td>
@@ -134,10 +152,48 @@ import { Plant } from '../plant';
       background-color: #dff0d8;
       border-color: #d6e9c6;
     }
+
+    .plant-page__filter-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+   }
+
+   .plant-page__filter {
+    flex: 1;
+    padding: 0.5rem;
+    margin-right: 0.5rem;
+   }
+
+   .plant-page__filter-button {
+    background-color: #563d7c;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 10px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+   }
+
+   .plant-page__filter-button:hover {
+    background-color: #6c757d;
+   }
+
+   .plant-page__highlight-info {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 1rem;
+   }
   `
 })
 export class PlantListComponent {
+  allPlants: Plant[] = [];
   plants: Plant[] = [];
+  filterType: string = "";
   serverMessage: string | null = null;
   serverMessageType: 'success' | 'error' | null = null;
 
@@ -145,6 +201,7 @@ export class PlantListComponent {
     this.plantService.getPlants().subscribe({
       next: (plants: Plant[]) => {
         this.plants = plants;
+        this.allPlants = plants;
         console.log(`Plants: ${JSON.stringify(this.plants)}`);
       },
       error: (err: any) => {
@@ -154,15 +211,23 @@ export class PlantListComponent {
     });
   }
 
+  filterPlants() {
+    if (this.filterType === "") {
+      this.plants = this.allPlants;
+      return;
+    }
+    this.plants = this.allPlants.filter(plant => plant.type === this.filterType);
+  }
+
   deletePlant(plantId: string) {
-    if(!confirm('Are you sure you want to delete this plant?')) {
+    if (!confirm('Are you sure you want to delete this plant?')) {
       return;
     }
 
     this.plantService.deletePlant(plantId).subscribe({
       next: () => {
         console.log(`Plant with ID ${plantId} deleted successfully`);
-        this.plants.filter(p => p._id !== plantId);
+        this.plants = this.plants.filter(p => p._id !== plantId);
         this.serverMessageType = 'success';
         this.serverMessage = `Plant with ID ${plantId} deleted successfully`;
         this.clearMessageAfterDelay();
